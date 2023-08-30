@@ -1,0 +1,4 @@
+Pavle,Andric,Andra,123,student
+Pavle,Andric,Andra2,123,profesor
+Pavle,Andric,Andra3,123,administrator
+Lazar,Filipovic,Laki,PoZanimanjuRom,student
