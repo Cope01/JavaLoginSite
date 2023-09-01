@@ -31,13 +31,13 @@ public class SignUpStrana extends JFrame {
                 String password = textField4.getText();
                 // Check if all fields are filled
                 if (name.isEmpty() || surname.isEmpty() || username.isEmpty() || password.isEmpty()) {
-                    JOptionPane.showMessageDialog(SignUpStrana.this, "All fields are required.");
+                    JOptionPane.showMessageDialog(SignUpStrana.this, "Morate da popunite sva polja");
                     return;
                 }
 
                 // Check if username already exists
                 if (userExists(username)) {
-                    JOptionPane.showMessageDialog(SignUpStrana.this, "Username already exists.");
+                    JOptionPane.showMessageDialog(SignUpStrana.this, "Username vec postoji");
                     return;
                 }
 
@@ -48,7 +48,7 @@ public class SignUpStrana extends JFrame {
                     writer.newLine();
                     writer.close();
 
-                    JOptionPane.showMessageDialog(SignUpStrana.this, "Sign up successful!");
+                    JOptionPane.showMessageDialog(SignUpStrana.this, "Uspesno ste napravili nalog");
 
                     // Clear the fields
                     textField1.setText("");

@@ -35,19 +35,22 @@ public class LogInStrana {
                 String password = new String(passwordField1.getPassword());
 
                 if (authenticateUser(username, password)) {
-                    // Login successful
-                    JOptionPane.showMessageDialog(null, "Login successful!");
-                    // Navigate to PocetnaStrana
-                    JFrame loginFrame = (JFrame) SwingUtilities.getWindowAncestor(Panel1);
-                    loginFrame.dispose();
-                    JFrame pocetnaFrame = new JFrame("Pocetna Strana");
-                    pocetnaFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-                    pocetnaFrame.setContentPane(new PocetnaStrana().Panel3);
-                    pocetnaFrame.pack();
-                    pocetnaFrame.setVisible(true);
+                    String userRole = getUserRole(username, password); // Get the user's role
+                    if (userRole != null) {
+                        // Login successful
+                        JOptionPane.showMessageDialog(null, "Uspesno ste se prijavili");
+                        // Navigate to PocetnaStrana
+                        JFrame loginFrame = (JFrame) SwingUtilities.getWindowAncestor(Panel1);
+                        loginFrame.dispose();
+                        JFrame pocetnaFrame = new JFrame("Pocetna Strana");
+                        pocetnaFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+                        pocetnaFrame.setContentPane(new PocetnaStrana(userRole).Panel3); // Pass the userRole
+                        pocetnaFrame.pack();
+                        pocetnaFrame.setVisible(true);
+                    }
                 } else {
                     // Login failed
-                    JOptionPane.showMessageDialog(null, "Login failed. Please check your credentials.");
+                    JOptionPane.showMessageDialog(null, "Uneli ste nesto pogresno, pokusajte opet");
                 }
             }
         });
@@ -58,16 +61,32 @@ public class LogInStrana {
             }
         });
     }
-
+    private String getUserRole(String username, String password) {
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader("userData.txt"));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(",");
+                if (parts.length >= 5 && parts[2].equals(username) && parts[3].equals(password)) {
+                    reader.close();
+                    return parts[4]; // Return the user's role
+                }
+            }
+            reader.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
     private boolean authenticateUser(String username, String password) {
         try {
             BufferedReader reader = new BufferedReader(new FileReader("userData.txt"));
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split(",");
-                if (parts.length >= 4 && parts[2].equals(username) && parts[3].equals(password)) {
+                if (parts.length >= 5 && parts[2].equals(username) && parts[3].equals(password)) {
                     reader.close();
-                    return true;
+                    return true; // Return true for any valid user
                 }
             }
             reader.close();
@@ -76,6 +95,7 @@ public class LogInStrana {
         }
         return false;
     }
+
 
     public static void main(String[] args) {
         JFrame frame = new JFrame("LoginStrana");
