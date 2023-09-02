@@ -1,8 +1,4 @@
-Pavle,Andric,Andra,123,student
-Pavle,Andric,Andra2,123,profesor
-Pavle,Andric,Andra3,123,administrator
-Lazar,Filipovic,Laki,PoZanimanjuRom,student
+UH,Ah,Andra,123,student
+P,A,Andra3,123,administrator
 Taj,Neki,To,Nesto,profesor
-Petar,Petrovic,Njegos,1234,student
-,,,,student
-,,,,student
+
