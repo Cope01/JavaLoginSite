@@ -35,31 +35,57 @@ public class LogInStrana {
                 String password = new String(passwordField1.getPassword());
 
                 if (authenticateUser(username, password)) {
-                    String userRole = getUserRole(username, password); // Get the user's role
-                    if (userRole != null) {
-                        // Login successful
-                        JOptionPane.showMessageDialog(null, "Uspesno ste se prijavili");
-                        // Navigate to PocetnaStrana
+                    String userRole = getUserRole(username, password);
+
+                    if ("administrator".equals(userRole)) {
+                        // Open AdminStrana for Administrators
                         JFrame loginFrame = (JFrame) SwingUtilities.getWindowAncestor(Panel1);
                         loginFrame.dispose();
-                        JFrame pocetnaFrame = new JFrame("Pocetna Strana");
-                        pocetnaFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-                        pocetnaFrame.setContentPane(new PocetnaStrana(userRole).Panel3); // Pass the userRole
-                        pocetnaFrame.pack();
-                        pocetnaFrame.setVisible(true);
+                        JFrame adminFrame = new JFrame("AdminStrana");
+                        adminFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+                        adminFrame.setContentPane(new AdminStrana().Panel5);
+                        adminFrame.pack();
+                        adminFrame.setVisible(true);
                     }
+
+                    // Always open PocetnaStrana for any role
+                    JFrame loginFrame = (JFrame) SwingUtilities.getWindowAncestor(Panel1);
+                    loginFrame.dispose();
+                    JFrame pocetnaFrame = new JFrame("Pocetna Strana");
+                    pocetnaFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+                    pocetnaFrame.setContentPane(new PocetnaStrana(userRole).Panel3);
+                    pocetnaFrame.pack();
+                    pocetnaFrame.setVisible(true);
                 } else {
                     // Login failed
                     JOptionPane.showMessageDialog(null, "Uneli ste nesto pogresno, pokusajte opet");
                 }
             }
         });
+
         guestButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
 
             }
         });
+        guestButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Set the user role to "guest"
+                String userRole = "guest";
+
+                // Open PocetnaStrana for guests
+                JFrame loginFrame = (JFrame) SwingUtilities.getWindowAncestor(Panel1);
+                loginFrame.dispose();
+                JFrame pocetnaFrame = new JFrame("Pocetna Strana");
+                pocetnaFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+                pocetnaFrame.setContentPane(new PocetnaStrana(userRole).Panel3);
+                pocetnaFrame.pack();
+                pocetnaFrame.setVisible(true);
+            }
+        });
+
     }
     private String getUserRole(String username, String password) {
         try {

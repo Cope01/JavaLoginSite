@@ -1,5 +1,11 @@
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.UnsupportedFlavorException;
+import java.awt.dnd.DnDConstants;
+import java.awt.dnd.DropTarget;
+import java.awt.dnd.DropTargetAdapter;
+import java.awt.dnd.DropTargetDropEvent;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
@@ -43,6 +49,12 @@ public class PocetnaStrana {
     private JButton deleteButton3;
     private JButton editButton3;
     private JLabel DragAndDrop;
+    private JPanel DropPanel;
+    private JButton downloadButton;
+    private JTable droppedFilesTable;
+
+    private List<File> droppedFiles = new ArrayList<>(); // List to store dropped files
+    private DefaultTableModel droppedFilesTableModel; // Added a table model for the dropped files table
 
     public PocetnaStrana(String userRole) {
         // Define the number of tables and their data file names
@@ -67,6 +79,119 @@ public class PocetnaStrana {
                     textAreas[j].setVisible(false);
                 }
             }
+            DropPanel.setTransferHandler(null);
+            DragAndDrop.setText("You do not have permission to drag and drop files.");
+        } else {
+            // Initialize the table models and table data (for administrators and professors)
+            for (int i = 0; i < numTables; i++) {
+                DefaultTableModel tableModel = new DefaultTableModel();
+                tableModel.setColumnIdentifiers(new Object[]{"Column 1", "Column 2"});
+                tables[i].setModel(tableModel);
+
+                tableData[i] = loadDataFromCSV(dataFileNames[i]);
+
+                if (!tableData[i].isEmpty()) {
+                    DefaultTableModel model = (DefaultTableModel) tables[i].getModel();
+                    for (Object[] rowData : tableData[i]) {
+                        model.addRow(rowData);
+                    }
+                }
+            }
+        }
+
+        // Initialize the droppedFilesTableModel and set it for the droppedFilesTable
+        droppedFilesTableModel = new DefaultTableModel();
+        droppedFilesTableModel.setColumnIdentifiers(new Object[]{"File Name"});
+        droppedFilesTable.setModel(droppedFilesTableModel);
+
+        // Load information about dropped files when logging in
+        droppedFiles = loadDroppedFilesFromCSV("dropped_files.csv");
+        // Populate the droppedFilesTableModel with the loaded files
+        for (File file : droppedFiles) {
+            droppedFilesTableModel.addRow(new Object[]{file.getName()});
+        }
+
+        DropPanel.setDropTarget(new DropTarget(DropPanel, new DropTargetAdapter() {
+            @Override
+            public void drop(DropTargetDropEvent e) {
+                if (e.isDataFlavorSupported(DataFlavor.javaFileListFlavor)) {
+                    e.acceptDrop(DnDConstants.ACTION_COPY);
+
+                    // Check the user's role
+                    if (!"guest".equals(userRole)) {
+                        try {
+                            List<File> newDroppedFiles = (List<File>) e.getTransferable().getTransferData(DataFlavor.javaFileListFlavor);
+                            droppedFiles.addAll(newDroppedFiles); // Store the dropped files
+
+                            // Add the dropped files to the new table
+                            for (File file : newDroppedFiles) {
+                                droppedFilesTableModel.addRow(new Object[]{file.getName()});
+                            }
+
+                            // Inform the user that files have been dropped
+                            JOptionPane.showMessageDialog(Panel3, "Files dropped and added to the download list.");
+                            // Save the updated list of dropped files
+                            saveDroppedFilesToCSV(droppedFiles, "dropped_files.csv");
+                        } catch (UnsupportedFlavorException | IOException ex) {
+                            ex.printStackTrace();
+                        }
+                    } else {
+                        // Guests are not allowed to download files
+                        JOptionPane.showMessageDialog(Panel3, "Guests do not have permission to download files.");
+                    }
+                } else {
+                    e.rejectDrop();
+                }
+            }
+        }));
+
+        downloadButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (!"guest".equals(userRole)) {
+                    int selectedRow = droppedFilesTable.getSelectedRow();
+                    if (selectedRow != -1) {
+                        File selectedFile = droppedFiles.get(selectedRow);
+
+                        // Prompt the user for the download location
+                        JFileChooser fileChooser = new JFileChooser();
+                        fileChooser.setDialogTitle("Choose Download Location");
+                        fileChooser.setSelectedFile(new File(selectedFile.getName())); // Set the default file name
+
+                        int userSelection = fileChooser.showSaveDialog(Panel3);
+
+                        if (userSelection == JFileChooser.APPROVE_OPTION) {
+                            File downloadLocation = fileChooser.getSelectedFile();
+
+                            // Copy the selected file to the selected download location
+                            try (InputStream in = new FileInputStream(selectedFile);
+                                 OutputStream out = new FileOutputStream(downloadLocation)) {
+
+                                byte[] buffer = new byte[1024];
+                                int bytesRead;
+                                while ((bytesRead = in.read(buffer)) > 0) {
+                                    out.write(buffer, 0, bytesRead);
+                                }
+
+                                JOptionPane.showMessageDialog(Panel3, "File downloaded to: " + downloadLocation.getAbsolutePath());
+                            } catch (IOException ex) {
+                                ex.printStackTrace();
+                                JOptionPane.showMessageDialog(Panel3, "Error downloading file: " + selectedFile.getName());
+                            }
+                        }
+                    } else {
+                        JOptionPane.showMessageDialog(Panel3, "Please select a file to download.");
+                    }
+                } else {
+                    // Guests are not allowed to download files
+                    JOptionPane.showMessageDialog(Panel3, "Guests do not have permission to download files.");
+                }
+            }
+        });
+
+// Hide the download button for the "guest" role
+        if ("guest".equals(userRole)) {
+            downloadButton.setVisible(false);
         }
 
         // Initialize the table models and table data
@@ -118,6 +243,12 @@ public class PocetnaStrana {
             });
         }
 
+        // Set up delete button action listeners for the droppedFilesTable
+        deleteButton.addActionListener(e -> deleteDataFromDroppedFilesTable());
+        deleteButton1.addActionListener(e -> deleteDataFromDroppedFilesTable());
+        deleteButton2.addActionListener(e -> deleteDataFromDroppedFilesTable());
+        deleteButton3.addActionListener(e -> deleteDataFromDroppedFilesTable());
+
         // Set up signOutButton ActionListener
         signOutButton.addActionListener(new ActionListener() {
             @Override
@@ -126,6 +257,9 @@ public class PocetnaStrana {
                 for (int i = 0; i < numTables; i++) {
                     saveDataToCSV(tableData[i], dataFileNames[i]);
                 }
+
+                // Save the list of dropped files
+                saveDroppedFilesToCSV(droppedFiles, "dropped_files.csv");
 
                 LogInStrana logInStrana = new LogInStrana();
                 JFrame pocetnaFrame = (JFrame) SwingUtilities.getWindowAncestor(Panel3);
@@ -194,6 +328,18 @@ public class PocetnaStrana {
         }
     }
 
+    // Delete data from the droppedFilesTable
+    private void deleteDataFromDroppedFilesTable() {
+        int selectedRow = droppedFilesTable.getSelectedRow();
+
+        if (selectedRow != -1) { // Check if a row is selected
+            droppedFilesTableModel.removeRow(selectedRow);
+            droppedFiles.remove(selectedRow);
+        } else {
+            JOptionPane.showMessageDialog(Panel3, "Please select a file to delete.");
+        }
+    }
+
     // Save data to a CSV file
     private void saveDataToCSV(List<Object[]> data, String fileName) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileName))) {
@@ -223,5 +369,34 @@ public class PocetnaStrana {
             // You can create the file here if it doesn't exist initially
         }
         return data;
+    }
+
+    // Method to save information about dropped files to a CSV file
+    private void saveDroppedFilesToCSV(List<File> files, String fileName) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileName))) {
+            for (File file : files) {
+                writer.write(file.getAbsolutePath());
+                writer.newLine();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Method to load information about dropped files from a CSV file
+    private List<File> loadDroppedFilesFromCSV(String fileName) {
+        List<File> files = new ArrayList<>();
+        try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                File file = new File(line);
+                if (file.exists()) {
+                    files.add(file);
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return files;
     }
 }
