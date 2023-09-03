@@ -21,7 +21,7 @@ public class LogInStrana {
                 JFrame loginFrame = (JFrame) SwingUtilities.getWindowAncestor(Panel1);
                 loginFrame.dispose();
                 JFrame signUpFrame = new JFrame("Sign Up");
-                signUpFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); // Close only this frame
+                signUpFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
                 signUpFrame.setContentPane(signUpStrana.Panel2);
                 signUpFrame.pack();
                 signUpFrame.setVisible(true);
@@ -38,7 +38,6 @@ public class LogInStrana {
                     String userRole = getUserRole(username, password);
 
                     if ("administrator".equals(userRole)) {
-                        // Open AdminStrana for Administrators
                         JFrame loginFrame = (JFrame) SwingUtilities.getWindowAncestor(Panel1);
                         loginFrame.dispose();
                         JFrame adminFrame = new JFrame("AdminStrana");
@@ -48,7 +47,6 @@ public class LogInStrana {
                         adminFrame.setVisible(true);
                     }
 
-                    // Always open PocetnaStrana for any role
                     JFrame loginFrame = (JFrame) SwingUtilities.getWindowAncestor(Panel1);
                     loginFrame.dispose();
                     JFrame pocetnaFrame = new JFrame("Pocetna Strana");
@@ -57,7 +55,6 @@ public class LogInStrana {
                     pocetnaFrame.pack();
                     pocetnaFrame.setVisible(true);
                 } else {
-                    // Login failed
                     JOptionPane.showMessageDialog(null, "Uneli ste nesto pogresno, pokusajte opet");
                 }
             }
@@ -72,10 +69,8 @@ public class LogInStrana {
         guestButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Set the user role to "guest"
                 String userRole = "guest";
 
-                // Open PocetnaStrana for guests
                 JFrame loginFrame = (JFrame) SwingUtilities.getWindowAncestor(Panel1);
                 loginFrame.dispose();
                 JFrame pocetnaFrame = new JFrame("Pocetna Strana");
@@ -85,8 +80,8 @@ public class LogInStrana {
                 pocetnaFrame.setVisible(true);
             }
         });
-
     }
+
     private String getUserRole(String username, String password) {
         try {
             BufferedReader reader = new BufferedReader(new FileReader("userData.txt"));
@@ -95,7 +90,7 @@ public class LogInStrana {
                 String[] parts = line.split(",");
                 if (parts.length >= 5 && parts[2].equals(username) && parts[3].equals(password)) {
                     reader.close();
-                    return parts[4]; // Return the user's role
+                    return parts[4];
                 }
             }
             reader.close();
@@ -104,6 +99,7 @@ public class LogInStrana {
         }
         return null;
     }
+
     private boolean authenticateUser(String username, String password) {
         try {
             BufferedReader reader = new BufferedReader(new FileReader("userData.txt"));
@@ -112,7 +108,7 @@ public class LogInStrana {
                 String[] parts = line.split(",");
                 if (parts.length >= 5 && parts[2].equals(username) && parts[3].equals(password)) {
                     reader.close();
-                    return true; // Return true for any valid user
+                    return true;
                 }
             }
             reader.close();
@@ -121,7 +117,6 @@ public class LogInStrana {
         }
         return false;
     }
-
 
     public static void main(String[] args) {
         JFrame frame = new JFrame("LoginStrana");
