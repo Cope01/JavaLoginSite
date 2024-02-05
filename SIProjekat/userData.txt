@@ -3,4 +3,3 @@ Test1,testtt,Profesor,123,profesor
 Test2,testttt,Administrator,123,administrator
 Test3,testtttt,Student,123,student
 
-Anica,Urosevic,Anci,123,student
